@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: acts-service
     ports:
       - "8080:8080"
@@ -26,7 +28,7 @@ services:
       - acts-network
 
   mongodb:
-    image: mongo:7.0
+    image: mongo:6.0
     container_name: acts-mongodb
     ports:
       - "27017:27017"
