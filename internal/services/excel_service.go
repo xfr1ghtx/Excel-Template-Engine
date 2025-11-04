@@ -40,8 +40,8 @@ func (s *excelService) GenerateAct(act *models.Act, outputPath string) error {
 		return fmt.Errorf("failed to open template: %w", err)
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			utils.LogError("Error closing Excel file: %v", err)
+		if closeErr := f.Close(); closeErr != nil {
+			utils.LogError("Error closing Excel file: %v", closeErr)
 		}
 	}()
 
@@ -54,7 +54,7 @@ func (s *excelService) GenerateAct(act *models.Act, outputPath string) error {
 	utils.LogInfo("Processing %d sheets in Excel template", len(sheets))
 	for _, sheetName := range sheets {
 		utils.LogDebug("Processing sheet: %s", sheetName)
-		err := s.processSheet(f, sheetName, templateData)
+		err = s.processSheet(f, sheetName, templateData)
 		if err != nil {
 			utils.LogError("Error processing sheet %s: %v", sheetName, err)
 			utils.LogMethodError("ExcelService.GenerateAct", err)
@@ -64,7 +64,8 @@ func (s *excelService) GenerateAct(act *models.Act, outputPath string) error {
 
 	// Save the file
 	utils.LogInfo("Saving Excel file to: %s", outputPath)
-	if err := f.SaveAs(outputPath); err != nil {
+	err = f.SaveAs(outputPath)
+	if err != nil {
 		utils.LogMethodError("ExcelService.GenerateAct", err)
 		return fmt.Errorf("failed to save file: %w", err)
 	}
@@ -87,12 +88,14 @@ func (s *excelService) processSheet(f *excelize.File, sheetName string, data map
 	// Iterate through all rows and columns
 	for rowIdx, row := range rows {
 		for colIdx := range row {
-			cellName, err := excelize.CoordinatesToCellName(colIdx+1, rowIdx+1)
+			var cellName string
+			cellName, err = excelize.CoordinatesToCellName(colIdx+1, rowIdx+1)
 			if err != nil {
 				continue
 			}
 
-			cellValue, err := f.GetCellValue(sheetName, cellName)
+			var cellValue string
+			cellValue, err = f.GetCellValue(sheetName, cellName)
 			if err != nil {
 				continue
 			}
@@ -111,7 +114,8 @@ func (s *excelService) processSheet(f *excelize.File, sheetName string, data map
 				})
 
 				// Set the new value
-				if err := f.SetCellValue(sheetName, cellName, newValue); err != nil {
+				err = f.SetCellValue(sheetName, cellName, newValue)
+				if err != nil {
 					utils.LogError("Error setting cell value at %s: %v", cellName, err)
 				}
 			}

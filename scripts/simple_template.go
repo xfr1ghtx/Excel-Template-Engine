@@ -21,18 +21,22 @@ func main() {
 		log.Fatalf("Error creating sheet: %v", err)
 	}
 	f.SetActiveSheet(index)
-	if err := f.DeleteSheet("Sheet1"); err != nil {
+	err = f.DeleteSheet("Sheet1")
+	if err != nil {
 		log.Fatalf("Error deleting default sheet: %v", err)
 	}
 
-	if err := f.SetColWidth(sheetName, "A", "A", 30); err != nil {
+	err = f.SetColWidth(sheetName, "A", "A", 30)
+	if err != nil {
 		log.Fatalf("Error setting column width A: %v", err)
 	}
-	if err := f.SetColWidth(sheetName, "B", "B", 30); err != nil {
+	err = f.SetColWidth(sheetName, "B", "B", 30)
+	if err != nil {
 		log.Fatalf("Error setting column width B: %v", err)
 	}
 
-	headerStyle, err := f.NewStyle(&excelize.Style{
+	var headerStyle int
+	headerStyle, err = f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
@@ -40,16 +44,20 @@ func main() {
 		log.Fatalf("Error creating header style: %v", err)
 	}
 
-	if err := f.SetCellValue(sheetName, "A1", "АКТ ВЫПОЛНЕННЫХ РАБОТ"); err != nil {
+	err = f.SetCellValue(sheetName, "A1", "АКТ ВЫПОЛНЕННЫХ РАБОТ")
+	if err != nil {
 		log.Fatalf("Error setting header title: %v", err)
 	}
-	if err := f.MergeCell(sheetName, "A1", "B1"); err != nil {
+	err = f.MergeCell(sheetName, "A1", "B1")
+	if err != nil {
 		log.Fatalf("Error merging header cells: %v", err)
 	}
-	if err := f.SetCellStyle(sheetName, "A1", "B1", headerStyle); err != nil {
+	err = f.SetCellStyle(sheetName, "A1", "B1", headerStyle)
+	if err != nil {
 		log.Fatalf("Error setting header style: %v", err)
 	}
-	if err := f.SetRowHeight(sheetName, 1, 30); err != nil {
+	err = f.SetRowHeight(sheetName, 1, 30)
+	if err != nil {
 		log.Fatalf("Error setting header row height: %v", err)
 	}
 
@@ -71,15 +79,18 @@ func main() {
 
 	for i, row := range data {
 		rowNum := i + 2
-		if err := f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowNum), row[0]); err != nil {
+		err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowNum), row[0])
+		if err != nil {
 			log.Fatalf("Error setting cell A%d: %v", rowNum, err)
 		}
-		if err := f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowNum), row[1]); err != nil {
+		err = f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowNum), row[1])
+		if err != nil {
 			log.Fatalf("Error setting cell B%d: %v", rowNum, err)
 		}
 	}
 
-	if err := f.SaveAs("templates/act_template.xlsx"); err != nil {
+	err = f.SaveAs("templates/act_template.xlsx")
+	if err != nil {
 		log.Fatalf("Error saving file: %v", err)
 	}
 
