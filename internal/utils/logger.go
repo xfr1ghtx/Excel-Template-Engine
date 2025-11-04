@@ -17,25 +17,29 @@ var (
 
 // InitLogger initializes the logger with a log file
 func InitLogger(logPath string) error {
-	logMutex.Lock()
-	defer logMutex.Unlock()
+    logMutex.Lock()
 
-	if isInitialized {
-		return nil
-	}
+    if isInitialized {
+        logMutex.Unlock()
+        return nil
+    }
 
-	// Open log file in append mode, create if doesn't exist
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
-	}
+    // Open log file in append mode, create if doesn't exist
+    file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+    if err != nil {
+        logMutex.Unlock()
+        return fmt.Errorf("failed to open log file: %w", err)
+    }
 
-	logFile = file
-	logger = log.New(logFile, "", 0) // No prefix, we'll add timestamp manually
-	isInitialized = true
+    logFile = file
+    logger = log.New(logFile, "", 0) // No prefix, we'll add timestamp manually
+    isInitialized = true
 
-	LogInfo("Logger initialized successfully")
-	return nil
+    // Release the mutex before logging to avoid re-entrancy deadlock
+    logMutex.Unlock()
+
+    LogInfo("Logger initialized successfully")
+    return nil
 }
 
 // CloseLogger closes the log file
