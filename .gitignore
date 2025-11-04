@@ -44,3 +44,4 @@ cmd/server/server
 
 # Logs
 *.log
+logs.txt

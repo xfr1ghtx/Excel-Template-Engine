@@ -11,10 +11,17 @@ import (
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/handlers"
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/repository"
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/services"
+	"github.com/stepanpotapov/Excel-Template-Engine/internal/utils"
 )
 
 func main() {
-	log.Println("Starting Acts Service...")
+	// Initialize logger
+	if err := utils.InitLogger("logs.txt"); err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer utils.CloseLogger()
+
+	utils.LogInfo("Starting Acts Service...")
 
 	// Load configuration
 	cfg := config.Load()
@@ -23,7 +30,7 @@ func main() {
 	mongoClient := repository.ConnectMongoDB(cfg)
 	defer func() {
 		if err := mongoClient.Disconnect(); err != nil {
-			log.Printf("Error disconnecting from MongoDB: %v", err)
+			utils.LogError("Error disconnecting from MongoDB: %v", err)
 		}
 	}()
 
@@ -78,8 +85,9 @@ func main() {
 	// Start server in a goroutine
 	go func() {
 		addr := cfg.ServerHost + ":" + cfg.ServerPort
-		log.Printf("Server starting on %s", addr)
+		utils.LogInfo("Server starting on %s", addr)
 		if err := router.Run(addr); err != nil {
+			utils.LogError("Failed to start server: %v", err)
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
@@ -89,6 +97,6 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	utils.LogInfo("Shutting down server...")
 }
 

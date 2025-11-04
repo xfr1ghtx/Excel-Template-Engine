@@ -3,13 +3,13 @@ package services
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/config"
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/models"
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/repository"
+	"github.com/stepanpotapov/Excel-Template-Engine/internal/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -37,6 +37,8 @@ func NewActService(repo repository.ActRepository, excelService ExcelService, cfg
 
 // CreateAct creates a new act in the database
 func (s *actService) CreateAct(ctx context.Context, act *models.Act) (string, error) {
+	utils.LogMethodInit("ActService.CreateAct")
+	
 	// Set timestamps
 	now := time.Now()
 	act.CreatedAt = now
@@ -52,26 +54,32 @@ func (s *actService) CreateAct(ctx context.Context, act *models.Act) (string, er
 	// Save to database
 	id, err := s.repo.Create(ctx, act)
 	if err != nil {
-		log.Printf("Error creating act: %v", err)
+		utils.LogMethodError("ActService.CreateAct", err)
 		return "", fmt.Errorf("failed to create act: %w", err)
 	}
 
-	log.Printf("Successfully created act with ID: %s", id)
+	utils.LogInfo("Successfully created act with ID: %s", id)
+	utils.LogMethodSuccess("ActService.CreateAct")
 	return id, nil
 }
 
 // GenerateAct generates an Excel file for an act
 func (s *actService) GenerateAct(ctx context.Context, actID string) (string, error) {
+	utils.LogMethodInit("ActService.GenerateAct")
+	utils.LogInfo("Generating act for ID: %s", actID)
+	
 	// Fetch act from database
 	act, err := s.repo.FindByID(ctx, actID)
 	if err != nil {
-		log.Printf("Error finding act: %v", err)
+		utils.LogMethodError("ActService.GenerateAct", err)
 		return "", fmt.Errorf("act not found: %w", err)
 	}
 
 	// Check if BigAct exists
 	if act.BigAct == nil {
-		return "", fmt.Errorf("act does not have BigAct data")
+		err := fmt.Errorf("act does not have BigAct data")
+		utils.LogMethodError("ActService.GenerateAct", err)
+		return "", err
 	}
 
 	// Check if bigActChanged is true
@@ -82,7 +90,8 @@ func (s *actService) GenerateAct(ctx context.Context, actID string) (string, err
 
 	// Return existing link if not changed
 	if act.BigAct.BigActLink != "" {
-		log.Printf("Returning existing BigActLink: %s", act.BigAct.BigActLink)
+		utils.LogInfo("Returning existing BigActLink: %s", act.BigAct.BigActLink)
+		utils.LogMethodSuccess("ActService.GenerateAct")
 		return act.BigAct.BigActLink, nil
 	}
 
@@ -92,6 +101,8 @@ func (s *actService) GenerateAct(ctx context.Context, actID string) (string, err
 
 // processAndGenerateAct processes the act and generates the Excel file
 func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act) (string, error) {
+	utils.LogInfo("Processing and generating act: %s", act.ID.Hex())
+	
 	// Find positions with current period costs
 	positionsWithCurrent := s.findPositionsWithCurrentPeriod(act.Positions)
 
@@ -100,10 +111,12 @@ func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act)
 	if len(positionsWithCurrent) > 0 {
 		// Use positions with current period costs
 		selectedPositions = positionsWithCurrent
+		utils.LogDebug("Using %d positions with current period costs", len(positionsWithCurrent))
 	} else {
 		// Fallback to positions with accumulated cost
 		positionsWithAccumulated := s.findPositionsWithAccumulated(act.Positions)
 		selectedPositions = positionsWithAccumulated
+		utils.LogDebug("Using %d positions with accumulated costs", len(positionsWithAccumulated))
 	}
 
 	// Calculate totals
@@ -121,7 +134,7 @@ func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act)
 	act.UpdatedAt = time.Now()
 	err := s.repo.Update(ctx, act.ID.Hex(), act)
 	if err != nil {
-		log.Printf("Error updating act: %v", err)
+		utils.LogMethodError("ActService.processAndGenerateAct", err)
 		return "", fmt.Errorf("failed to update act: %w", err)
 	}
 
@@ -133,7 +146,7 @@ func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act)
 	// Generate Excel file
 	err = s.excelService.GenerateAct(act, outputPath)
 	if err != nil {
-		log.Printf("Error generating Excel file: %v", err)
+		utils.LogMethodError("ActService.processAndGenerateAct", err)
 		return "", fmt.Errorf("failed to generate Excel: %w", err)
 	}
 
@@ -145,11 +158,12 @@ func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act)
 	// Update act again with the link
 	err = s.repo.Update(ctx, act.ID.Hex(), act)
 	if err != nil {
-		log.Printf("Error updating act with BigActLink: %v", err)
+		utils.LogError("Error updating act with BigActLink: %v", err)
 		// Don't return error here, file is already generated
 	}
 
-	log.Printf("Successfully generated act with download link: %s", downloadLink)
+	utils.LogInfo("Successfully generated act with download link: %s", downloadLink)
+	utils.LogMethodSuccess("ActService.GenerateAct")
 	return downloadLink, nil
 }
 

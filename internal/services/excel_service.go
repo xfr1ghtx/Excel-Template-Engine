@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 
@@ -31,38 +30,48 @@ func NewExcelService(cfg *config.Config) ExcelService {
 
 // GenerateAct generates an Excel file from an act using the template
 func (s *excelService) GenerateAct(act *models.Act, outputPath string) error {
+	utils.LogMethodInit("ExcelService.GenerateAct")
+	utils.LogExcelInit(outputPath)
+
 	// Open the template file
+	utils.LogInfo("Opening Excel template: %s", s.config.TemplatePath)
 	f, err := excelize.OpenFile(s.config.TemplatePath)
 	if err != nil {
-		log.Printf("Error opening template file: %v", err)
+		utils.LogMethodError("ExcelService.GenerateAct", err)
 		return fmt.Errorf("failed to open template: %w", err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Printf("Error closing Excel file: %v", err)
+			utils.LogError("Error closing Excel file: %v", err)
 		}
 	}()
 
 	// Build template data
+	utils.LogDebug("Building template data for act: %s", act.ID.Hex())
 	templateData := s.buildTemplateData(act)
 
 	// Process all sheets
 	sheets := f.GetSheetList()
+	utils.LogInfo("Processing %d sheets in Excel template", len(sheets))
 	for _, sheetName := range sheets {
+		utils.LogDebug("Processing sheet: %s", sheetName)
 		err := s.processSheet(f, sheetName, templateData)
 		if err != nil {
-			log.Printf("Error processing sheet %s: %v", sheetName, err)
+			utils.LogError("Error processing sheet %s: %v", sheetName, err)
+			utils.LogMethodError("ExcelService.GenerateAct", err)
 			return fmt.Errorf("failed to process sheet %s: %w", sheetName, err)
 		}
 	}
 
 	// Save the file
+	utils.LogInfo("Saving Excel file to: %s", outputPath)
 	if err := f.SaveAs(outputPath); err != nil {
-		log.Printf("Error saving Excel file: %v", err)
+		utils.LogMethodError("ExcelService.GenerateAct", err)
 		return fmt.Errorf("failed to save file: %w", err)
 	}
 
-	log.Printf("Successfully generated Excel file: %s", outputPath)
+	utils.LogExcelComplete(outputPath)
+	utils.LogMethodSuccess("ExcelService.GenerateAct")
 	return nil
 }
 
@@ -94,7 +103,7 @@ func (s *excelService) processSheet(f *excelize.File, sheetName string, data map
 				newValue := pattern.ReplaceAllStringFunc(cellValue, func(match string) string {
 					// Extract key from {{key}}
 					key := pattern.FindStringSubmatch(match)[1]
-					
+
 					// Get value from data
 					if value, ok := data[key]; ok {
 						return s.formatValue(value)
@@ -104,7 +113,7 @@ func (s *excelService) processSheet(f *excelize.File, sheetName string, data map
 
 				// Set the new value
 				if err := f.SetCellValue(sheetName, cellName, newValue); err != nil {
-					log.Printf("Error setting cell value at %s: %v", cellName, err)
+					utils.LogError("Error setting cell value at %s: %v", cellName, err)
 				}
 			}
 		}
@@ -169,4 +178,3 @@ func parseFloat(s string) float64 {
 	}
 	return f
 }
-
