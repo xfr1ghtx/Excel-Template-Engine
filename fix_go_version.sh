@@ -14,7 +14,7 @@ cp go.mod go.mod.backup
 cat > go.mod << 'GOMOD'
 module github.com/stepanpotapov/Excel-Template-Engine
 
-go 1.23
+go 1.24
 
 require (
 	github.com/gin-gonic/gin v1.11.0
