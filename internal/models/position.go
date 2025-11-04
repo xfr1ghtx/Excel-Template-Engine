@@ -22,4 +22,3 @@ func (p *Position) HasCurrentPeriodCost() bool {
 func (p *Position) HasAccumulatedCost() bool {
 	return p.AccumulatedCost != nil
 }
-

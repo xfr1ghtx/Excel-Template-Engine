@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/config"
 	"github.com/stepanpotapov/Excel-Template-Engine/internal/models"
@@ -168,13 +167,4 @@ func (s *excelService) formatValue(value interface{}) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
-}
-
-// parseFloat safely parses a string to float64
-func parseFloat(s string) float64 {
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return 0
-	}
-	return f
 }

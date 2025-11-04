@@ -36,4 +36,3 @@ func RespondWithSuccess(c *gin.Context, code int, data interface{}) {
 func RespondWithJSON(c *gin.Context, code int, payload interface{}) {
 	c.JSON(code, payload)
 }
-

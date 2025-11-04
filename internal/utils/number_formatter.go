@@ -63,4 +63,3 @@ func formatIntegerWithCommas(n int64) string {
 
 	return result.String()
 }
-

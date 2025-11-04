@@ -56,4 +56,3 @@ func TestFormatNumber(t *testing.T) {
 		})
 	}
 }
-

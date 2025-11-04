@@ -19,7 +19,11 @@ func main() {
 	if err := utils.InitLogger("logs.txt"); err != nil {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
-	defer utils.CloseLogger()
+	defer func() {
+		if err := utils.CloseLogger(); err != nil {
+			log.Printf("Failed to close logger: %v", err)
+		}
+	}()
 
 	utils.LogInfo("Starting Acts Service...")
 
@@ -66,7 +70,7 @@ func main() {
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status": "ok",
+			"status":  "ok",
 			"service": "acts-service",
 		})
 	})
@@ -99,4 +103,3 @@ func main() {
 
 	utils.LogInfo("Shutting down server...")
 }
-

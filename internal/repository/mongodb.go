@@ -21,7 +21,7 @@ type MongoDBClient struct {
 // ConnectMongoDB establishes a connection to MongoDB
 func ConnectMongoDB(cfg *config.Config) *MongoDBClient {
 	utils.LogMethodInit("ConnectMongoDB")
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.MongoDBTimeout)
 	defer cancel()
 
@@ -56,7 +56,7 @@ func ConnectMongoDB(cfg *config.Config) *MongoDBClient {
 // Disconnect closes the MongoDB connection
 func (m *MongoDBClient) Disconnect() error {
 	utils.LogMethodInit("MongoDBClient.Disconnect")
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -76,4 +76,3 @@ func (m *MongoDBClient) Disconnect() error {
 func (m *MongoDBClient) GetCollection(name string) *mongo.Collection {
 	return m.Database.Collection(name)
 }
-

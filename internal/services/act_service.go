@@ -38,7 +38,7 @@ func NewActService(repo repository.ActRepository, excelService ExcelService, cfg
 // CreateAct creates a new act in the database
 func (s *actService) CreateAct(ctx context.Context, act *models.Act) (string, error) {
 	utils.LogMethodInit("ActService.CreateAct")
-	
+
 	// Set timestamps
 	now := time.Now()
 	act.CreatedAt = now
@@ -67,7 +67,7 @@ func (s *actService) CreateAct(ctx context.Context, act *models.Act) (string, er
 func (s *actService) GenerateAct(ctx context.Context, actID string) (string, error) {
 	utils.LogMethodInit("ActService.GenerateAct")
 	utils.LogInfo("Generating act for ID: %s", actID)
-	
+
 	// Fetch act from database
 	act, err := s.repo.FindByID(ctx, actID)
 	if err != nil {
@@ -102,12 +102,12 @@ func (s *actService) GenerateAct(ctx context.Context, actID string) (string, err
 // processAndGenerateAct processes the act and generates the Excel file
 func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act) (string, error) {
 	utils.LogInfo("Processing and generating act: %s", act.ID.Hex())
-	
+
 	// Find positions with current period costs
 	positionsWithCurrent := s.findPositionsWithCurrentPeriod(act.Positions)
 
 	var selectedPositions []models.Position
-	
+
 	if len(positionsWithCurrent) > 0 {
 		// Use positions with current period costs
 		selectedPositions = positionsWithCurrent
@@ -121,12 +121,12 @@ func (s *actService) processAndGenerateAct(ctx context.Context, act *models.Act)
 
 	// Calculate totals
 	totalCost, totalInspection, totalConsiderations := s.calculateTotals(selectedPositions)
-	
+
 	// Update BigAct with totals
 	act.BigAct.TotalCost = totalCost
 	act.BigAct.TotalCostInspection = totalInspection
 	act.BigAct.TotalCostConsiderations = totalConsiderations
-	
+
 	// Concatenate position IDs
 	act.BigAct.PositionIDs = s.concatenatePositionIDs(selectedPositions)
 
@@ -216,4 +216,3 @@ func (s *actService) calculateTotals(positions []models.Position) (float64, floa
 
 	return totalCost, totalInspection, totalConsiderations
 }
-
