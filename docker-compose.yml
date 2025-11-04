@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: acts-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SERVER_HOST=0.0.0.0
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DATABASE=acts_db
+      - MONGODB_COLLECTION=acts
+      - TEMPLATE_PATH=./templates/act_template.xlsx
+      - GENERATED_PATH=./generated
+      - BASE_URL=http://localhost:8080
+      - LOG_LEVEL=info
+    volumes:
+      - ./generated:/root/generated
+      - ./templates:/root/templates
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - acts-network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: acts-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - acts-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: acts-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongodb:27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - acts-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  acts-network:
+    driver: bridge
+
